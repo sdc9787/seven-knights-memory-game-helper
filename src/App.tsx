@@ -11,12 +11,12 @@ import { motion, AnimatePresence } from 'motion/react';
 const ROWS = 3;
 const COLS = 8;
 const TOTAL_CARDS = ROWS * COLS;
-const DETECTION_SIZE = 10; 
-const CAPTURE_DELAY_MS = 100; // 60fps 환경에서 더 빠르게 낚아채기 위해 단축
+const DETECTION_SIZE = 10;
+const CAPTURE_DELAY_MS = 200; // 60fps 환경에서 더 빠르게 낚아채기 위해 단축
 const RESET_PERSISTENCE_FRAMES = 60; // 60fps 기준 약 1초 유지
 
 // 제공된 뒷면 이미지의 평균 밝기 근사치
-const REFERENCE_BACK_BRIGHTNESS = 52; 
+const REFERENCE_BACK_BRIGHTNESS = 52;
 const DEFAULT_RECT = { x: 45, y: 76, w: 507, h: 254, gapX: 14, gapY: 10, offsetX: -6, offsetY: 27, detectionSize: 6 };
 
 interface CardState {
@@ -50,11 +50,11 @@ export default function App() {
     }))
   );
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isPaused, setIsPaused] = useState(false); 
-  const [pauseDuration, setPauseDuration] = useState(1000); 
+  const [isPaused, setIsPaused] = useState(false);
+  const [pauseDuration, setPauseDuration] = useState(1000);
   const [sensitivity, setSensitivity] = useState(10); // 감지 민감도 (%)
   const [overlayThreshold, setOverlayThreshold] = useState(5); // 오버레이 감지 임계값
-  
+
   const pauseDurationRef = useRef(pauseDuration);
   const sensitivityRef = useRef(sensitivity);
   const overlayThresholdRef = useRef(overlayThreshold);
@@ -63,18 +63,18 @@ export default function App() {
   useEffect(() => { sensitivityRef.current = sensitivity; }, [sensitivity]);
   useEffect(() => { overlayThresholdRef.current = overlayThreshold; }, [overlayThreshold]);
 
-  const isPausedRef = useRef(false); 
+  const isPausedRef = useRef(false);
   const gameStartTimeRef = useRef<number>(0); // 게임 시작(START 문구) 시점 기록
   const pauseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [logs, setLogs] = useState<string[]>(['시스템 준비 완료. 시작 버튼을 눌러주세요.']);
   const [fps, setFps] = useState(0);
   const fpsIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const frameCountRef = useRef(0);
-  
+
   const addLog = (msg: string) => {
     setLogs(prev => [msg, ...prev].slice(0, 50));
   };
-  
+
   // Selection State
   const [selection, setSelection] = useState<SelectionRect | null>({
     startX: DEFAULT_RECT.x,
@@ -126,7 +126,7 @@ export default function App() {
 
       ctx.fillStyle = card.isCapturing ? '#f9731622' : (card.image ? '#27272a' : '#18181b');
       ctx.fillRect(x + 2, y + 2, cardW - 4, cardH - 4);
-      
+
       ctx.strokeStyle = card.isCapturing ? '#f97316' : (card.image ? '#3f3f46' : '#27272a');
       ctx.lineWidth = 1;
       ctx.strokeRect(x + 2, y + 2, cardW - 4, cardH - 4);
@@ -183,7 +183,7 @@ export default function App() {
         await video.requestPictureInPicture();
         setIsPipActive(true);
         addLog('PiP 모드가 활성화되었습니다. 게임 화면 위에 띄워두고 플레이하세요.');
-        
+
         video.addEventListener('leavepictureinpicture', () => {
           setIsPipActive(false);
         }, { once: true });
@@ -198,7 +198,7 @@ export default function App() {
     <AnimatePresence>
       {showUsage && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -249,7 +249,7 @@ export default function App() {
               </div>
             </div>
 
-            <button 
+            <button
               onClick={() => setShowUsage(false)}
               className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl shadow-lg shadow-orange-900/20 transition-all"
             >
@@ -270,18 +270,18 @@ export default function App() {
   const getBrightnessFromPixels = (pixels: Uint8ClampedArray, rect: { x: number, y: number, w: number, h: number }, canvasW: number, canvasH: number, vOffX: number = 0, vOffY: number = 0) => {
     const centerX = Math.floor(rect.x + rect.w / 2 + vOffX);
     const centerY = Math.floor(rect.y + rect.h / 2 + vOffY);
-    
+
     const dSize = detectionSizeRef.current;
     const startX = Math.max(0, centerX - Math.floor(dSize / 2));
     const startY = Math.max(0, centerY - Math.floor(dSize / 2));
-    
+
     let brightnessSum = 0;
     let count = 0;
     for (let y = startY; y < startY + dSize && y < canvasH; y++) {
       for (let x = startX; x < startX + dSize && x < canvasW; x++) {
         const idx = (y * canvasW + x) * 4;
         if (idx + 2 < pixels.length) {
-          brightnessSum += (pixels[idx] + pixels[idx+1] + pixels[idx+2]) / 3;
+          brightnessSum += (pixels[idx] + pixels[idx + 1] + pixels[idx + 2]) / 3;
           count++;
         }
       }
@@ -292,7 +292,7 @@ export default function App() {
   // --- Grid Calculation from Selection ---
   const updateGridFromSelection = useCallback((sel: SelectionRect, gapX: number = 0, gapY: number = 0, offX: number = 0, offY: number = 0, dSize: number = 10) => {
     if (!videoRef.current) return;
-    
+
     const video = videoRef.current;
     const container = containerRef.current;
     if (!container) return;
@@ -308,7 +308,7 @@ export default function App() {
     const vH = sel.height * scaleY;
     const vGapX = gapX * scaleX;
     const vGapY = gapY * scaleY;
-    
+
     vOffsetXRef.current = offX * scaleX;
     vOffsetYRef.current = offY * scaleY;
     detectionSizeRef.current = dSize;
@@ -360,7 +360,7 @@ export default function App() {
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     setDragStart({ x, y });
     setCurrentDrag({ x, y });
     setIsDragging(true);
@@ -377,7 +377,7 @@ export default function App() {
 
   const handleMouseUp = () => {
     if (!isDragging || !dragStart || !currentDrag) return;
-    
+
     const startX = Math.min(dragStart.x, currentDrag.x);
     const startY = Math.min(dragStart.y, currentDrag.y);
     const width = Math.abs(currentDrag.x - dragStart.x);
@@ -386,12 +386,12 @@ export default function App() {
     if (width > 20 && height > 20) {
       const newSelection = { startX, startY, width, height };
       setSelection(newSelection);
-      setManualRect({ 
-        x: Math.round(startX), 
-        y: Math.round(startY), 
-        w: Math.round(width), 
-        h: Math.round(height), 
-        gapX: manualRect.gapX, 
+      setManualRect({
+        x: Math.round(startX),
+        y: Math.round(startY),
+        w: Math.round(width),
+        h: Math.round(height),
+        gapX: manualRect.gapX,
         gapY: manualRect.gapY,
         offsetX: manualRect.offsetX,
         offsetY: manualRect.offsetY,
@@ -399,7 +399,7 @@ export default function App() {
       });
       updateGridFromSelection(newSelection, manualRect.gapX, manualRect.gapY, manualRect.offsetX, manualRect.offsetY, manualRect.detectionSize);
     }
-    
+
     setIsDragging(false);
     setDragStart(null);
     setCurrentDrag(null);
@@ -407,11 +407,11 @@ export default function App() {
 
   // --- Manual Coordinate Apply ---
   const applyManualRect = () => {
-    const newSelection = { 
-      startX: manualRect.x, 
-      startY: manualRect.y, 
-      width: manualRect.w, 
-      height: manualRect.h 
+    const newSelection = {
+      startX: manualRect.x,
+      startY: manualRect.y,
+      width: manualRect.w,
+      height: manualRect.h
     };
     setSelection(newSelection);
     updateGridFromSelection(newSelection, manualRect.gapX, manualRect.gapY, manualRect.offsetX, manualRect.offsetY, manualRect.detectionSize);
@@ -459,7 +459,7 @@ export default function App() {
 
       const brightness = getBrightnessFromPixels(pixels, card.rect, canvas.width, canvas.height, vOffsetXRef.current, vOffsetYRef.current);
       const baseline = card.baselineBrightness || REFERENCE_BACK_BRIGHTNESS;
-      
+
       // 설정된 민감도에 따라 판정
       const threshold = 1 - (sensitivityRef.current / 100);
       const backThreshold = 1 - (sensitivityRef.current / 200); // 복귀는 좀 더 완만하게
@@ -477,11 +477,11 @@ export default function App() {
       if (isCurrentlyFlipped !== card.isFlipped) {
         nextCards[i] = { ...nextCards[i], isFlipped: isCurrentlyFlipped };
         hasChanges = true;
-        
+
         // If it just flipped up, count it for overlay detection
         if (isCurrentlyFlipped) {
           newlyFlippedCount++;
-          
+
           // If we don't have an image, start capturing
           if (!card.image && !card.isCapturing) {
             nextCards[i].isCapturing = true;
@@ -514,7 +514,7 @@ export default function App() {
       isPausedRef.current = true;
       setIsPaused(true);
       gameStartTimeRef.current = Date.now(); // 게임 시작(START 문구) 시점 기록 (초기화 보호 시작)
-      
+
       if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
       pauseTimeoutRef.current = setTimeout(() => {
         isPausedRef.current = false;
@@ -532,7 +532,7 @@ export default function App() {
         detectedAt: null
       }));
       setCards(resetCards);
-      
+
       if (hasAnyImage) {
         addLog(`화면 전체 변화 감지 (${newlyFlippedCount}개). 그리드를 초기화하고 ${pauseDurationRef.current}ms간 감지를 중단합니다.`);
       } else {
@@ -632,7 +632,7 @@ export default function App() {
 
   // --- UI ---
   const isRecording = cards.some(c => c.isCapturing);
-  const avgBaseline = cards.length > 0 
+  const avgBaseline = cards.length > 0
     ? Math.round(cards.reduce((acc, c) => acc + (c.baselineBrightness || REFERENCE_BACK_BRIGHTNESS), 0) / cards.length)
     : REFERENCE_BACK_BRIGHTNESS;
 
@@ -646,16 +646,16 @@ export default function App() {
             </div>
             <h1 className="text-lg font-semibold tracking-tight">세븐나이츠 리버스 메모리 게임 헬퍼</h1>
           </div>
-          
+
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => setShowUsage(true)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-all border border-zinc-700"
             >
               <Monitor className="w-4 h-4" />
               사용법
             </button>
-            <button 
+            <button
               onClick={manualReset}
               className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-orange-400 transition-colors"
               title="전체 초기화"
@@ -680,13 +680,12 @@ export default function App() {
               )}
             </div>
 
-            <button 
+            <button
               onClick={isStreaming ? stopCapture : startCapture}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                isStreaming 
-                ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200' 
-                : 'bg-orange-600 hover:bg-orange-500 text-white shadow-lg shadow-orange-900/20'
-              }`}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${isStreaming
+                  ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
+                  : 'bg-orange-600 hover:bg-orange-500 text-white shadow-lg shadow-orange-900/20'
+                }`}
             >
               {isStreaming ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
               {isStreaming ? '중단' : '시작'}
@@ -733,7 +732,7 @@ export default function App() {
           </div>
 
           {/* Video Container with Drag Selection */}
-          <section 
+          <section
             ref={containerRef}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
@@ -741,10 +740,10 @@ export default function App() {
             className="bg-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden relative aspect-video cursor-crosshair select-none"
           >
             <video ref={videoRef} className="w-full h-full object-cover pointer-events-none" muted playsInline />
-            
+
             {/* Selection Overlay */}
             {isDragging && dragStart && currentDrag && (
-              <div 
+              <div
                 className="absolute border-2 border-orange-500 bg-orange-500/20 pointer-events-none"
                 style={{
                   left: Math.min(dragStart.x, currentDrag.x),
@@ -763,7 +762,7 @@ export default function App() {
             )}
 
             {selection && !isDragging && (
-              <div 
+              <div
                 className="absolute border-2 border-green-500/50 bg-green-500/5 pointer-events-none"
                 style={{
                   left: selection.startX,
@@ -773,24 +772,24 @@ export default function App() {
                 }}
               >
                 {/* Visual Grid Guide */}
-                <div 
+                <div
                   className="w-full h-full grid grid-cols-8 grid-rows-3"
                   style={{ gap: `${manualRect.gapY}px ${manualRect.gapX}px` }}
                 >
                   {Array.from({ length: 24 }).map((_, i) => (
                     <div key={i} className="border border-green-500/30 flex items-center justify-center relative">
                       {/* Detection Area Box (Visualizing the detection zone) */}
-                      <div 
-                        className="absolute border border-green-400/60 rounded-[1px]" 
-                        style={{ 
+                      <div
+                        className="absolute border border-green-400/60 rounded-[1px]"
+                        style={{
                           width: `${manualRect.detectionSize}px`,
                           height: `${manualRect.detectionSize}px`,
-                          transform: `translate(${manualRect.offsetX}px, ${manualRect.offsetY}px)` 
+                          transform: `translate(${manualRect.offsetX}px, ${manualRect.offsetY}px)`
                         }}
                       />
                       {/* Center Detection Point Marker */}
-                      <div 
-                        className="w-1 h-1 bg-white rounded-full shadow-[0_0_4px_rgba(255,255,255,0.8)] opacity-60 z-10" 
+                      <div
+                        className="w-1 h-1 bg-white rounded-full shadow-[0_0_4px_rgba(255,255,255,0.8)] opacity-60 z-10"
                         style={{ transform: `translate(${manualRect.offsetX}px, ${manualRect.offsetY}px)` }}
                       />
                       {/* Optional: Cell Index for debugging */}
@@ -807,7 +806,7 @@ export default function App() {
 
           {/* Manual Calibration Panel */}
           <section className="bg-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden">
-            <button 
+            <button
               onClick={() => setIsSettingsCollapsed(!isSettingsCollapsed)}
               className="w-full p-4 flex items-center justify-between hover:bg-zinc-800/50 transition-colors group"
             >
@@ -828,14 +827,14 @@ export default function App() {
                 >
                   <div className="p-4 pt-0 space-y-4 border-t border-zinc-800/50">
                     <div className="flex items-center justify-end gap-2 mb-2">
-                      <button 
+                      <button
                         onClick={recalibrateBaseline}
                         disabled={!isStreaming}
                         className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-300 text-[10px] font-bold rounded-md transition-all border border-zinc-700"
                       >
                         밝기 기준 재설정
                       </button>
-                      <button 
+                      <button
                         onClick={applyManualRect}
                         disabled={!isStreaming}
                         className="px-3 py-1 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[10px] font-bold rounded-md transition-all"
@@ -843,7 +842,7 @@ export default function App() {
                         좌표 적용
                       </button>
                     </div>
-                    
+
                     <div className="space-y-4">
                       {/* Group 1: Grid Layout */}
                       <div className="space-y-3">
@@ -862,7 +861,7 @@ export default function App() {
                           ].map((field) => (
                             <div key={field.key} className="space-y-1.5">
                               <label className="text-[10px] text-zinc-500 font-medium">{field.label}</label>
-                              <input 
+                              <input
                                 type="number"
                                 value={manualRect[field.key as keyof typeof manualRect]}
                                 onChange={(e) => {
@@ -894,7 +893,7 @@ export default function App() {
                           ].map((field) => (
                             <div key={field.key} className="space-y-1.5">
                               <label className="text-[10px] text-zinc-500 font-medium">{field.label}</label>
-                              <input 
+                              <input
                                 type="number"
                                 value={manualRect[field.key as keyof typeof manualRect]}
                                 onChange={(e) => {
@@ -921,7 +920,7 @@ export default function App() {
                         <div className="grid grid-cols-3 md:grid-cols-3 gap-3 p-3 bg-zinc-950/30 rounded-xl border border-zinc-800/50">
                           <div className="space-y-1.5">
                             <label className="text-[10px] text-blue-500 font-medium">시작 지연 (ms)</label>
-                            <input 
+                            <input
                               type="number"
                               step="100"
                               value={pauseDuration}
@@ -931,7 +930,7 @@ export default function App() {
                           </div>
                           <div className="space-y-1.5">
                             <label className="text-[10px] text-purple-500 font-medium">오버레이 임계값</label>
-                            <input 
+                            <input
                               type="number"
                               value={overlayThreshold}
                               onChange={(e) => setOverlayThreshold(parseInt(e.target.value) || 1)}
@@ -940,7 +939,7 @@ export default function App() {
                           </div>
                           <div className="space-y-1.5">
                             <label className="text-[10px] text-green-500 font-medium">민감도 ({sensitivity}%)</label>
-                            <input 
+                            <input
                               type="range"
                               min="5"
                               max="40"
@@ -967,18 +966,17 @@ export default function App() {
               <h2 className="text-xl font-bold tracking-tight">기록된 카드 (3x8)</h2>
             </div>
             <div className="flex items-center gap-1">
-              <button 
+              <button
                 onClick={togglePip}
-                className={`p-2 rounded-lg transition-all ${
-                  isPipActive 
-                  ? 'bg-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.4)]' 
-                  : 'hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100'
-                }`}
+                className={`p-2 rounded-lg transition-all ${isPipActive
+                    ? 'bg-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.4)]'
+                    : 'hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100'
+                  }`}
                 title="PiP 모드 (게임 화면 위에 띄우기)"
               >
                 <MonitorPlay className="w-5 h-5" />
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setCards(prev => prev.map(c => ({ ...c, image: null })));
                   addLog('사용자에 의해 그리드가 초기화되었습니다.');
@@ -988,7 +986,7 @@ export default function App() {
               >
                 <RefreshCw className="w-5 h-5" />
               </button>
-              <button 
+              <button
                 onClick={recalibrateBaseline}
                 className="p-2 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-400 hover:text-zinc-100"
                 title="밝기 기준점 재설정 (Ready 문구 사라진 후 클릭)"
@@ -1006,27 +1004,26 @@ export default function App() {
                   layout
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className={`aspect-[3/4] rounded-lg border flex flex-col items-center justify-center relative overflow-hidden transition-all duration-300 ${
-                    card.isCapturing 
-                    ? 'bg-orange-500/10 border-orange-500/30' 
-                    : card.image 
-                      ? 'bg-zinc-800/80 border-zinc-700 shadow-lg' 
-                      : 'bg-zinc-900/20 border-zinc-800/50'
-                  }`}
+                  className={`aspect-[3/4] rounded-lg border flex flex-col items-center justify-center relative overflow-hidden transition-all duration-300 ${card.isCapturing
+                      ? 'bg-orange-500/10 border-orange-500/30'
+                      : card.image
+                        ? 'bg-zinc-800/80 border-zinc-700 shadow-lg'
+                        : 'bg-zinc-900/20 border-zinc-800/50'
+                    }`}
                 >
                   <span className="absolute top-0.5 left-1 text-[8px] font-bold text-zinc-600 z-10">
                     {idx + 1}
                   </span>
-                  
+
                   {card.isCapturing && !card.image && (
                     <div className="w-2 h-2 border border-orange-400 border-t-transparent rounded-full animate-spin" />
                   )}
 
                   {card.image && (
-                    <motion.img 
+                    <motion.img
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      src={card.image} 
+                      src={card.image}
                       alt={`Card ${idx + 1}`}
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
