@@ -569,7 +569,7 @@ export default function App() {
   const startCapture = async () => {
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { cursor: "never", frameRate: 60 } as any,
+        video: { cursor: "never", frameRate: 60, displaySurface: "window" } as any,
         audio: false,
       });
       if (videoRef.current) {
